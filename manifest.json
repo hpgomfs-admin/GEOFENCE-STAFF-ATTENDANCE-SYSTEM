@@ -1,6 +1,6 @@
 {
-  "name": "Hospital Attendance",
-  "short_name": "Attendance",
+  "name": "Geo-Fence Staff Attendance System",
+  "short_name": "PUNCHCARD HPG",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#ffffff",
