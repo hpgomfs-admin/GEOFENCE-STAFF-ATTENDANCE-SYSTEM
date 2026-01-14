@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Hospital Pasir Gudang</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <link rel="manifest" href="manifest.json"> <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  
+  <style>
+    body { background: #f0f4f8; font-family: sans-serif; height: 100vh; display: flex; align-items: center; justify-content: center; }
+    .card { width: 100%; max-width: 400px; padding: 20px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); text-align: center; }
+    .btn-punch { height: 80px; width: 100%; margin-bottom: 10px; font-size: 1.2rem; font-weight: bold; border-radius: 15px; border:none; color: white;}
+    .btn-in { background: #1cc88a; } .btn-out { background: #e74a3b; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <h3>Hospital Pasir Gudang</h3>
+  <hr>
+  
+  <div id="loginSection">
+    <input id="email" class="form-control mb-2" placeholder="Email">
+    <button onclick="sendOTP()" class="btn btn-primary w-100" id="otpBtn">Send OTP</button>
+    <div id="otpDiv" class="hidden mt-2">
+      <input id="otp" class="form-control mb-2" placeholder="123456">
+      <button onclick="verifyOTP()" class="btn btn-success w-100">Login</button>
+    </div>
+  </div>
+
+  <div id="punchSection" class="hidden">
+    <h4 id="uName">Name</h4>
+    <span class="badge bg-secondary mb-3" id="uShift">Shift</span>
+    <div id="status" class="mb-2 text-muted">Ready</div>
+    <button onclick="punch('PUNCH IN')" class="btn-punch btn-in">PUNCH IN</button>
+    <button onclick="punch('PUNCH OUT')" class="btn-punch btn-out">PUNCH OUT</button>
+    <button onclick="logout()" class="btn btn-light btn-sm mt-3">Logout</button>
+  </div>
+</div>
+
+<script>
+  // PASTE YOUR GOOGLE SCRIPT DEPLOYMENT URL HERE
+  const API_URL = "https://script.google.com/macros/s/AKfycbwJA-PW_fV67H0MTMK2Ga-IY4KdLv_gePtiX8sKwCGnQKQU1KvnbSXmkLJXBw6iPFjA/exec"; 
+
+  // Auto Login
+  const token = localStorage.getItem("hpg_token");
+  if(token) {
+    document.getElementById("loginSection").classList.add("hidden");
+    document.getElementById("punchSection").classList.remove("hidden");
+    document.getElementById("uName").innerText = localStorage.getItem("hpg_name");
+    document.getElementById("uShift").innerText = localStorage.getItem("hpg_shift");
+  }
+
+  async function postData(data) {
+    // This is the bridge to Google Sheets
+    const res = await fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify(data)
+    });
+    return await res.json();
+  }
+
+  async function sendOTP() {
+    document.getElementById("otpBtn").innerText = "Sending...";
+    const res = await postData({ action: "sendOTP", email: document.getElementById("email").value });
+    alert(res.msg);
+    document.getElementById("otpBtn").innerText = "Send OTP";
+    if(res.success) document.getElementById("otpDiv").classList.remove("hidden");
+  }
+
+  async function verifyOTP() {
+    const res = await postData({ 
+      action: "verifyOTP", 
+      email: document.getElementById("email").value, 
+      otp: document.getElementById("otp").value 
+    });
+    if(res.success) {
+      localStorage.setItem("hpg_token", res.key);
+      localStorage.setItem("hpg_name", res.name);
+      localStorage.setItem("hpg_shift", res.shift);
+      location.reload();
+    } else {
+      alert(res.msg);
+    }
+  }
+
+  function punch(act) {
+    document.getElementById("status").innerText = "Locating...";
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      document.getElementById("status").innerText = "Saving...";
+      
+      // Get IP
+      const ipRes = await fetch('https://api.ipify.org?format=json');
+      const ipData = await ipRes.json();
+
+      const res = await postData({
+        action: "punch",
+        key: localStorage.getItem("hpg_token"),
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude,
+        accuracy: pos.coords.accuracy,
+        ip: ipData.ip,
+        act: act
+      });
+
+      document.getElementById("status").innerText = res.msg;
+      alert(res.msg);
+      
+    }, () => alert("GPS Error"), {enableHighAccuracy:true});
+  }
+
+  function logout() {
+    localStorage.clear(); location.reload();
+  }
+</script>
+</body>
+</html>
