@@ -13,6 +13,7 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
   <style>
+    /* 1. APP STYLING (Screen Only) */
     body { background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%); font-family: 'Poppins', sans-serif; min-height: 100vh; display: flex; align-items: center; justify-content: center; margin: 0; padding-top: env(safe-area-inset-top); }
     .app-card { width: 100%; max-width: 400px; background: white; border-radius: 24px; padding: 35px 25px; box-shadow: 0 15px 35px rgba(0, 50, 80, 0.1); text-align: center; }
     .logo-header { margin-bottom: 25px; border-bottom: 2px solid #e1e8ef; padding-bottom: 20px; }
@@ -20,18 +21,51 @@
     .title-hospital { font-weight: 600; color: #1b262c; font-size: 0.85rem; }
     .btn-punch { height: 80px; border-radius: 16px; font-size: 1.25rem; font-weight: 600; margin-bottom: 15px; width: 100%; border: none; color: white; }
     .btn-in { background: #1cc88a; } .btn-out { background: #e74a3b; }
-    
-    /* PRINT STYLES */
+    #printSection { display: none; } /* Hide report in app view */
+
+    /* 2. PRINT STYLING (A4 PDF Optimized) */
     @media print {
+      /* Hide App UI */
       body * { visibility: hidden; }
+      .app-card, .modal-backdrop, .modal { display: none !important; }
+
+      /* Show Report */
       #printSection, #printSection * { visibility: visible; }
-      #printSection { position: absolute; left: 0; top: 0; width: 100%; background: white; color: black; }
-      table, th, td { border: 1px solid black !important; border-collapse: collapse !important; font-size: 11px; padding: 4px; text-align: center; }
-      .app-card { display: none; }
+      
+      /* Setup A4 Page */
+      @page {
+        size: A4;
+        margin: 0; /* REMOVES BROWSER HEADER/FOOTER (URL, Date) */
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        background: white;
+      }
+
+      #printSection {
+        display: block !important;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        padding: 15mm; /* Internal padding for the paper */
+        box-sizing: border-box;
+      }
+
+      /* Compact Typography for Report */
+      .rpt-header { text-align: center; font-weight: bold; font-size: 12pt; line-height: 1.2; margin-bottom: 15px; text-transform: uppercase; color: black; }
+      .rpt-info { display: flex; justify-content: space-between; font-weight: bold; font-size: 10pt; margin-bottom: 5px; color: black; }
+      
+      /* Compact Table */
+      .report-table { width: 100%; border-collapse: collapse; font-size: 9pt; }
+      .report-table th { background-color: #eee !important; -webkit-print-color-adjust: exact; padding: 4px; border: 1px solid black; }
+      .report-table td { border: 1px solid black; padding: 2px; text-align: center; height: 18px; /* Fixed height to force fit */ }
+      
+      /* Signatures */
+      .rpt-footer { margin-top: 25px; display: flex; justify-content: space-between; font-size: 10pt; }
     }
-    #printSection { display: none; padding: 20px; }
-    .report-table { width: 100%; margin-top: 10px; }
-    .report-table th { background: #f0f0f0; }
   </style>
 </head>
 <body>
@@ -66,20 +100,35 @@
   </div>
 
   <div id="printSection">
-    <div class="text-center fw-bold mb-4" style="line-height:1.5;">
+    <div class="rpt-header">
       REPORT PUNCHCARD<br>JABATAN BEDAH MULUT & MAKSILOFASIAL<br>HOSPITAL PASIR GUDANG
     </div>
-    <div class="d-flex justify-content-between mb-2 small fw-bold">
-      <span id="rptName">Name: --</span><span id="rptMonth">Month: --</span>
+    
+    <div class="rpt-info">
+      <span id="rptName">NAMA: --</span>
+      <span id="rptMonth">BULAN: --</span>
     </div>
+
     <table class="report-table">
       <thead>
-        <tr><th width="5%">Date</th><th width="12%">IN</th><th width="12%">OUT</th><th width="12%">IN</th><th width="12%">OUT</th><th width="12%">IN</th><th width="12%">OUT</th><th>Catatan</th></tr>
+        <tr>
+          <th width="8%">TARIKH</th>
+          <th width="12%">MASUK</th>
+          <th width="12%">KELUAR</th>
+          <th width="12%">MASUK</th>
+          <th width="12%">KELUAR</th>
+          <th width="12%">MASUK</th>
+          <th width="12%">KELUAR</th>
+          <th>CATATAN</th>
+        </tr>
       </thead>
-      <tbody id="rptBody"></tbody>
+      <tbody id="rptBody">
+        </tbody>
     </table>
-    <div class="mt-5 d-flex justify-content-between small">
-      <div>Tandatangan Anggota: ____________</div><div>Tandatangan Ketua Jabatan: ____________</div>
+    
+    <div class="rpt-footer">
+      <div>Tandatangan Anggota:<br><br>_______________________</div>
+      <div>Tandatangan Ketua Jabatan:<br><br>_______________________</div>
     </div>
   </div>
 
@@ -105,7 +154,7 @@
 
   <script>
     // --- CONFIGURATION ---
-    const API_URL = "https://script.google.com/macros/s/AKfycbwJA-PW_fV67H0MTMK2Ga-IY4KdLv_gePtiX8sKwCGnQKQU1KvnbSXmkLJXBw6iPFjA/exec"; 
+    const API_URL = "PASTE_YOUR_GOOGLE_SCRIPT_URL_HERE"; 
     const KEY = 'hpg_token';
     const SHIFT_RULES = { "WBF1": 16.5, "WBF2": 17.0, "WBF3": 17.5 };
 
@@ -173,13 +222,14 @@
       bootstrap.Modal.getInstance(document.getElementById('reportModal')).hide();
 
       if(r.success) {
-        document.getElementById('rptName').innerText = "Name: " + r.name;
-        document.getElementById('rptMonth').innerText = "Month: " + m;
+        document.getElementById('rptName').innerText = "NAMA: " + r.name.toUpperCase();
+        document.getElementById('rptMonth').innerText = "BULAN: " + m;
         let html = "";
         const days = new Date(m.split('-')[0], m.split('-')[1], 0).getDate();
+        
         for(let i=1; i<=days; i++) {
           const p = (r.data[i] || []).sort();
-          html += `<tr><td class="fw-bold">${i}</td>`;
+          html += `<tr><td style="font-weight:bold">${i}</td>`;
           for(let c=0; c<6; c++) html += `<td>${p[c] || ""}</td>`;
           html += `<td></td></tr>`;
         }
