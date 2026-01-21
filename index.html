@@ -1,282 +1,196 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Hospital Pasir Gudang Attendance</title>
+  <title>Hospital Pasir Gudang</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-  
   <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="icon-192.png">
-  <link rel="icon" type="image/png" href="icon-192.png">
+  
+  <link rel="icon" type="image/png" href="https://img.icons8.com/fluency/512/hospital-3.png">
+  <link rel="apple-touch-icon" href="https://img.icons8.com/fluency/512/hospital-3.png">
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
   <style>
-    body { 
-      background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%); 
-      font-family: 'Poppins', sans-serif; 
-      min-height: 100vh; 
-      display: flex; 
-      align-items: center; 
-      justify-content: center; 
-      margin: 0;
-      padding-top: env(safe-area-inset-top);
-      padding-bottom: env(safe-area-inset-bottom);
+    body { background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%); font-family: 'Poppins', sans-serif; min-height: 100vh; display: flex; align-items: center; justify-content: center; margin: 0; padding-top: env(safe-area-inset-top); }
+    .app-card { width: 100%; max-width: 400px; background: white; border-radius: 24px; padding: 35px 25px; box-shadow: 0 15px 35px rgba(0, 50, 80, 0.1); text-align: center; }
+    .logo-header { margin-bottom: 25px; border-bottom: 2px solid #e1e8ef; padding-bottom: 20px; }
+    .title-main { font-weight: 600; color: #0f4c75; font-size: 1.1rem; text-transform: uppercase; }
+    .title-hospital { font-weight: 600; color: #1b262c; font-size: 0.85rem; }
+    .btn-punch { height: 80px; border-radius: 16px; font-size: 1.25rem; font-weight: 600; margin-bottom: 15px; width: 100%; border: none; color: white; }
+    .btn-in { background: #1cc88a; } .btn-out { background: #e74a3b; }
+    
+    /* PRINT STYLES */
+    @media print {
+      body * { visibility: hidden; }
+      #printSection, #printSection * { visibility: visible; }
+      #printSection { position: absolute; left: 0; top: 0; width: 100%; background: white; color: black; }
+      table, th, td { border: 1px solid black !important; border-collapse: collapse !important; font-size: 11px; padding: 4px; text-align: center; }
+      .app-card { display: none; }
     }
-    
-    .app-card { 
-      width: 100%; 
-      max-width: 400px; 
-      background: white; 
-      border-radius: 24px; 
-      padding: 35px 25px; 
-      box-shadow: 0 15px 35px rgba(0, 50, 80, 0.1); 
-      text-align: center;
-      position: relative;
-    }
-
-    .logo-header {
-      margin-bottom: 25px;
-      border-bottom: 2px solid #e1e8ef;
-      padding-bottom: 20px;
-    }
-    
-    .title-main { font-weight: 600; color: #0f4c75; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px; }
-    .title-sub { font-weight: 400; color: #3282b8; font-size: 0.9rem; margin-top: 5px; }
-    .title-hospital { font-weight: 600; color: #1b262c; font-size: 0.85rem; margin-top: 2px; }
-    
-    .form-control { border-radius: 12px; padding: 12px; border: 1px solid #dae1e7; background: #f9fbfd; font-size: 1.1rem; text-align: center; }
-    
-    .btn-primary { background: #0f4c75; border: none; border-radius: 12px; padding: 12px; font-weight: 600; font-size: 1rem; }
-    .btn-primary:hover { background: #0a3d61; }
-    
-    .btn-punch { 
-      height: 80px; 
-      border-radius: 16px; 
-      font-size: 1.25rem; 
-      font-weight: 600; 
-      margin-bottom: 15px; 
-      display: flex; 
-      align-items: center; 
-      justify-content: center; 
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-      transition: transform 0.1s;
-      width: 100%;
-      border: none;
-      color: white;
-    }
-    .btn-punch:active { transform: scale(0.98); }
-    
-    .btn-in { background: #1cc88a; }
-    .btn-out { background: #e74a3b; }
-    
-    .badge-shift { background: #eef2f7; color: #3282b8; padding: 5px 15px; border-radius: 20px; font-size: 0.9rem; font-weight: 600; display: inline-block; margin-bottom: 20px; }
-    
-    .last-status-box {
-      background: #fff3cd; color: #856404; border: 1px solid #ffeeba;
-      padding: 10px; border-radius: 12px; margin-bottom: 20px; font-size: 0.9rem; font-weight: 600;
-    }
+    #printSection { display: none; padding: 20px; }
+    .report-table { width: 100%; margin-top: 10px; }
+    .report-table th { background: #f0f0f0; }
   </style>
 </head>
 <body>
 
   <div class="app-card">
     <div class="logo-header">
-      <div class="title-main">Geo-Fence Staff Attendance System</div>
-      <div class="title-sub">Jabatan Bedah Mulut & Maksilofasial</div>
+      <div class="title-main">Geo-Fence Staff Attendance</div>
       <div class="title-hospital">Hospital Pasir Gudang</div>
     </div>
 
     <div id="loginView">
-      <p class="text-muted small mb-3">Please verify your email to access.</p>
       <input type="email" id="email" class="form-control mb-3" placeholder="Enter Work Email">
       <button onclick="reqOTP()" id="btnOtp" class="btn btn-primary w-100 mb-3">Send Access Code</button>
-      <div id="otpArea" style="display:none; animation: fadeIn 0.5s;">
+      <div id="otpArea" style="display:none;">
         <input type="tel" id="otp" class="form-control mb-3" placeholder="6-Digit OTP" maxlength="6">
-        <button onclick="doLogin()" class="btn btn-success w-100" style="padding:12px; border-radius:12px;">Verify & Login</button>
+        <button onclick="doLogin()" class="btn btn-success w-100">Verify & Login</button>
       </div>
     </div>
 
     <div id="punchView" class="d-none">
-      <h4 id="uName" class="text-dark fw-bold mb-1">Welcome</h4>
-      <div id="uShift" class="badge-shift">Loading Shift...</div>
-
-      <div id="lastActionBox" class="last-status-box d-none">
-         Last Action: <span id="lastActionText">--</span>
-      </div>
+      <h4 id="uName" class="fw-bold mb-1">Welcome</h4>
+      <span id="uShift" class="badge bg-light text-dark mb-3 border">--</span>
       
-      <button onclick="prePunchCheck('PUNCH IN')" class="btn btn-punch btn-in">
-        <span style="margin-right:10px;">📍</span> PUNCH IN
-      </button>
-      <button onclick="prePunchCheck('PUNCH OUT')" class="btn btn-punch btn-out">
-        <span style="margin-right:10px;">🛑</span> PUNCH OUT
-      </button>
+      <button onclick="prePunchCheck('PUNCH IN')" class="btn btn-punch btn-in">📍 PUNCH IN</button>
+      <button onclick="prePunchCheck('PUNCH OUT')" class="btn btn-punch btn-out">🛑 PUNCH OUT</button>
       
-      <div id="status" class="mt-3 text-muted small fw-bold">Ready to record</div>
-
-      <hr style="margin-top: 30px; opacity: 0.1;">
-      <button onclick="doLogout()" class="btn btn-light text-muted w-100 btn-sm">Sign Out / Refresh Account</button>
+      <button onclick="showReportModal()" class="btn btn-outline-dark w-100 mb-3 btn-sm">🖨️ Monthly Report</button>
+      
+      <div id="status" class="text-muted small fw-bold mt-2">Ready</div>
+      <hr><button onclick="doLogout()" class="btn btn-light text-muted w-100 btn-sm">Sign Out</button>
     </div>
   </div>
 
-  <div class="modal fade" id="earlyModal" tabindex="-1" data-bs-backdrop="static">
+  <div id="printSection">
+    <div class="text-center fw-bold mb-4" style="line-height:1.5;">
+      REPORT PUNCHCARD<br>JABATAN BEDAH MULUT & MAKSILOFASIAL<br>HOSPITAL PASIR GUDANG
+    </div>
+    <div class="d-flex justify-content-between mb-2 small fw-bold">
+      <span id="rptName">Name: --</span><span id="rptMonth">Month: --</span>
+    </div>
+    <table class="report-table">
+      <thead>
+        <tr><th width="5%">Date</th><th width="12%">IN</th><th width="12%">OUT</th><th width="12%">IN</th><th width="12%">OUT</th><th width="12%">IN</th><th width="12%">OUT</th><th>Catatan</th></tr>
+      </thead>
+      <tbody id="rptBody"></tbody>
+    </table>
+    <div class="mt-5 d-flex justify-content-between small">
+      <div>Tandatangan Anggota: ____________</div><div>Tandatangan Ketua Jabatan: ____________</div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="earlyModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content border-0 shadow">
-        <div class="modal-header bg-warning border-0 text-center">
-          <h5 class="modal-title fw-bold text-dark w-100">⚠️ Early Departure</h5>
-        </div>
-        <div class="modal-body text-center p-4">
-          <p class="text-muted mb-1">Your shift (<span id="warnShift" class="fw-bold"></span>) ends at:</p>
-          <h2 class="fw-bold text-dark" id="warnTime">--:--</h2>
-          <p class="small text-danger mt-3">You are punching out early. This will be flagged.</p>
-        </div>
-        <div class="modal-footer justify-content-center border-0 pb-4">
-          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-danger px-4" onclick="proceedPunch('PUNCH OUT')">Proceed Anyway</button>
-        </div>
+      <div class="modal-content text-center p-4">
+        <h5 class="fw-bold">⚠️ Early Departure</h5>
+        <p>Shift <span id="warnShift" class="fw-bold"></span> ends at <span id="warnTime" class="fw-bold"></span>.</p>
+        <button class="btn btn-danger w-100" onclick="proceedPunch('PUNCH OUT')">Proceed Anyway</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="reportModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content p-4">
+        <h6>Select Month</h6>
+        <input type="month" id="reportDate" class="form-control mb-3">
+        <button onclick="generateReport()" class="btn btn-primary w-100">Generate View</button>
       </div>
     </div>
   </div>
 
   <script>
-    // ==========================================
-    // CONFIGURATION
-    // ==========================================
-    
-    // IMPORTANT: PASTE YOUR GOOGLE DEPLOYMENT URL HERE
+    // --- CONFIGURATION ---
     const API_URL = "https://script.google.com/macros/s/AKfycbwJA-PW_fV67H0MTMK2Ga-IY4KdLv_gePtiX8sKwCGnQKQU1KvnbSXmkLJXBw6iPFjA/exec"; 
-    
     const KEY = 'hpg_token';
     const SHIFT_RULES = { "WBF1": 16.5, "WBF2": 17.0, "WBF3": 17.5 };
 
-    // --- 1. HELPER TO TALK TO GOOGLE ---
+    // --- LOGIC ---
     async function postData(data) {
-      try {
-        const res = await fetch(API_URL, {
-          method: "POST",
-          body: JSON.stringify(data)
-        });
-        return await res.json();
-      } catch (err) {
-        alert("Connection Error. Please check internet.");
-        return { success: false };
-      }
+      try { return await (await fetch(API_URL, { method: "POST", body: JSON.stringify(data) })).json(); }
+      catch (e) { alert("Connection Error"); return { success: false }; }
     }
 
-    // --- 2. AUTO LOGIN CHECK ---
     if(localStorage.getItem(KEY)) {
       document.getElementById('uName').innerText = localStorage.getItem('hpg_name');
       document.getElementById('uShift').innerText = localStorage.getItem('hpg_shift');
-      updateLastActionUI();
-      toPunch();
+      document.getElementById('loginView').classList.add('d-none');
+      document.getElementById('punchView').classList.remove('d-none');
     }
 
-    function updateLastActionUI() {
-      const lastType = localStorage.getItem('hpg_last_type');
-      const lastTime = localStorage.getItem('hpg_last_time');
-      if(lastType && lastTime) {
-        document.getElementById('lastActionBox').classList.remove('d-none');
-        document.getElementById('lastActionText').innerText = `${lastType} at ${lastTime}`;
-        const box = document.getElementById('lastActionBox');
-        if(lastType.includes("IN")) { box.style.background = "#d4edda"; box.style.color = "#155724"; box.style.borderColor = "#c3e6cb"; }
-        else { box.style.background = "#fff3cd"; box.style.color = "#856404"; box.style.borderColor = "#ffeeba"; }
-      }
-    }
-
-    function toPunch() { document.getElementById('loginView').classList.add('d-none'); document.getElementById('punchView').classList.remove('d-none'); }
-
-    // --- 3. AUTH LOGIC ---
     async function reqOTP() {
-      const em = document.getElementById('email').value;
-      if(!em) return alert("Enter Email");
+      const em = document.getElementById('email').value; if(!em) return alert("Enter Email");
       const btn = document.getElementById('btnOtp'); btn.innerText="Sending..."; btn.disabled=true;
-      
       const r = await postData({ action: "sendOTP", email: em });
-      
       alert(r.msg); btn.innerText="Send Access Code"; btn.disabled=false;
       if(r.success) document.getElementById('otpArea').style.display='block';
     }
 
     async function doLogin() {
-      const em = document.getElementById('email').value; const otp = document.getElementById('otp').value;
-      const r = await postData({ action: "verifyOTP", email: em, otp: otp });
-      
+      const r = await postData({ action: "verifyOTP", email: document.getElementById('email').value, otp: document.getElementById('otp').value });
       if(r.success) {
         localStorage.setItem(KEY, r.key); localStorage.setItem('hpg_name', r.name); localStorage.setItem('hpg_shift', r.shift);
-        document.getElementById('uName').innerText = r.name; document.getElementById('uShift').innerText = r.shift; toPunch();
+        location.reload();
       } else { alert(r.msg); }
     }
 
-    // --- 4. PRE-PUNCH CHECKS ---
     function prePunchCheck(act) {
       if (act === 'PUNCH IN') { proceedPunch(act); return; }
-      const shift = localStorage.getItem('hpg_shift');
-      const now = new Date();
-      const currentHour = now.getHours() + (now.getMinutes() / 60);
-      const endTime = SHIFT_RULES[shift];
-      if (endTime && currentHour < endTime) {
-        const endH = Math.floor(endTime);
-        const endM = (endTime - endH) * 60;
-        const formattedTime = (endH > 12 ? endH - 12 : endH) + ":" + (endM === 0 ? "00" : endM) + " PM";
-        document.getElementById('warnShift').innerText = shift; document.getElementById('warnTime').innerText = formattedTime;
+      const shift = localStorage.getItem('hpg_shift'); const now = new Date();
+      const h = now.getHours() + (now.getMinutes()/60); const end = SHIFT_RULES[shift];
+      if (end && h < end) {
+        document.getElementById('warnShift').innerText = shift;
+        document.getElementById('warnTime').innerText = Math.floor(end) + ":" + ((end%1)*60 || "00");
         new bootstrap.Modal('#earlyModal').show();
       } else { proceedPunch(act); }
     }
 
-    // --- 5. MAIN PUNCH FUNCTION (IP + GPS) ---
     function proceedPunch(act) {
-      const modalEl = document.getElementById('earlyModal');
-      const modal = bootstrap.Modal.getInstance(modalEl);
-      if(modal) modal.hide();
-
-      document.getElementById('status').innerHTML = "Identifying Network <span class='spinner-border spinner-border-sm'></span>";
-
-      fetch('https://api.ipify.org?format=json')
-        .then(response => response.json())
-        .then(data => {
-          const userIP = data.ip;
-          document.getElementById('status').innerHTML = "Acquiring GPS <span class='spinner-border spinner-border-sm'></span>";
-          
-          navigator.geolocation.getCurrentPosition(async (pos) => {
-            document.getElementById('status').innerText = "Verifying Location & IP...";
-            
-            const r = await postData({
-              action: "punch",
-              key: localStorage.getItem(KEY), 
-              lat: pos.coords.latitude, 
-              lng: pos.coords.longitude, 
-              accuracy: pos.coords.accuracy, 
-              ip: userIP, 
-              act: act
-            });
-
-            document.getElementById('status').innerText = r.msg;
-            if(r.success) {
-                 const now = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                 localStorage.setItem('hpg_last_type', act.replace('PUNCH ', '')); 
-                 localStorage.setItem('hpg_last_time', now); 
-                 updateLastActionUI();
-                 setTimeout(() => document.getElementById('status').innerText="Done", 5000);
-            }
-
-          }, err => {
-            alert("GPS Error. Please ensure Location Services are ON.");
-            document.getElementById('status').innerText = "GPS Error";
-          }, { enableHighAccuracy: true, timeout: 10000 });
-        })
-        .catch(error => {
-          alert("Network Warning: Could not verify IP.");
-          document.getElementById('status').innerText = "Network Error";
-        });
+      const m = bootstrap.Modal.getInstance(document.getElementById('earlyModal')); if(m) m.hide();
+      document.getElementById('status').innerHTML = "Locating...";
+      
+      fetch('https://api.ipify.org?format=json').then(r=>r.json()).then(d => {
+        navigator.geolocation.getCurrentPosition(async pos => {
+          const r = await postData({ action: "punch", key: localStorage.getItem(KEY), lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy, ip: d.ip, act: act });
+          document.getElementById('status').innerText = r.msg;
+          if(r.success) setTimeout(()=>document.getElementById('status').innerText="Done", 3000);
+        }, () => alert("GPS Error"), {enableHighAccuracy:true});
+      }).catch(() => alert("Network Error"));
     }
 
-    function doLogout() {
-      if(confirm("Log out?")) {
-        localStorage.clear();
-        location.reload();
-      }
+    function showReportModal() { document.getElementById('reportDate').value = new Date().toISOString().slice(0,7); new bootstrap.Modal('#reportModal').show(); }
+
+    async function generateReport() {
+      const m = document.getElementById('reportDate').value;
+      if(!m) return alert("Select Month");
+      const btn = document.querySelector('#reportModal .btn-primary'); btn.innerText="Loading..."; btn.disabled=true;
+      const r = await postData({ action: "getReport", key: localStorage.getItem(KEY), month: m });
+      btn.innerText="Generate View"; btn.disabled=false;
+      bootstrap.Modal.getInstance(document.getElementById('reportModal')).hide();
+
+      if(r.success) {
+        document.getElementById('rptName').innerText = "Name: " + r.name;
+        document.getElementById('rptMonth').innerText = "Month: " + m;
+        let html = "";
+        const days = new Date(m.split('-')[0], m.split('-')[1], 0).getDate();
+        for(let i=1; i<=days; i++) {
+          const p = (r.data[i] || []).sort();
+          html += `<tr><td class="fw-bold">${i}</td>`;
+          for(let c=0; c<6; c++) html += `<td>${p[c] || ""}</td>`;
+          html += `<td></td></tr>`;
+        }
+        document.getElementById('rptBody').innerHTML = html;
+        document.querySelector('.app-card').classList.add('d-none');
+        document.getElementById('printSection').style.display = 'block';
+        setTimeout(() => { window.print(); location.reload(); }, 500);
+      } else { alert(r.msg); }
     }
+
+    function doLogout() { localStorage.clear(); location.reload(); }
   </script>
 </body>
 </html>
