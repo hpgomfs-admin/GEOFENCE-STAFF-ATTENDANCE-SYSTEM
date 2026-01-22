@@ -1,246 +1,362 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Hospital Pasir Gudang</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-  <link rel="manifest" href="manifest.json">
+  <meta charset="utf-8">
+  <title>HPG Geo-Fence Attendance</title>
   
-  <link rel="icon" type="image/png" href="https://img.icons8.com/fluency/512/hospital-3.png">
-  <link rel="apple-touch-icon" href="https://img.icons8.com/fluency/512/hospital-3.png">
-
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  
   <style>
-    /* 1. APP STYLING (Screen Only) */
-    body { background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%); font-family: 'Poppins', sans-serif; min-height: 100vh; display: flex; align-items: center; justify-content: center; margin: 0; padding-top: env(safe-area-inset-top); }
-    .app-card { width: 100%; max-width: 400px; background: white; border-radius: 24px; padding: 35px 25px; box-shadow: 0 15px 35px rgba(0, 50, 80, 0.1); text-align: center; }
-    .logo-header { margin-bottom: 25px; border-bottom: 2px solid #e1e8ef; padding-bottom: 20px; }
-    .title-main { font-weight: 600; color: #0f4c75; font-size: 1.1rem; text-transform: uppercase; }
+    /* BASE STYLES */
+    body { 
+      background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%); 
+      font-family: 'Poppins', sans-serif; 
+      min-height: 100vh; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      padding: 20px;
+      overflow-x: hidden;
+    }
+    
+    .app-card { 
+      width: 100%; 
+      max-width: 400px; 
+      background: white; 
+      border-radius: 24px; 
+      padding: 35px 25px; 
+      box-shadow: 0 15px 35px rgba(0, 50, 80, 0.1); 
+      text-align: center; 
+      position: relative;
+    }
+
+    /* TYPOGRAPHY */
+    .title-main { font-weight: 700; color: #0f4c75; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px; line-height: 1.4; margin-bottom: 5px; }
+    .title-sub { font-weight: 500; color: #3282b8; font-size: 0.9rem; margin-bottom: 2px; }
     .title-hospital { font-weight: 600; color: #1b262c; font-size: 0.85rem; }
-    .btn-punch { height: 80px; border-radius: 16px; font-size: 1.25rem; font-weight: 600; margin-bottom: 15px; width: 100%; border: none; color: white; }
-    .btn-in { background: #1cc88a; } .btn-out { background: #e74a3b; }
-    #printSection { display: none; } /* Hide report in app view */
 
-    /* 2. PRINT STYLING (A4 PDF Optimized) */
-    @media print {
-      /* Hide App UI */
-      body * { visibility: hidden; }
-      .app-card, .modal-backdrop, .modal { display: none !important; }
-
-      /* Show Report */
-      #printSection, #printSection * { visibility: visible; }
-      
-      /* Setup A4 Page */
-      @page {
-        size: A4;
-        margin: 0; /* REMOVES BROWSER HEADER/FOOTER (URL, Date) */
-      }
-
-      body {
-        margin: 0;
-        padding: 0;
-        background: white;
-      }
-
-      #printSection {
-        display: block !important;
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        padding: 15mm; /* Internal padding for the paper */
-        box-sizing: border-box;
-      }
-
-      /* Compact Typography for Report */
-      .rpt-header { text-align: center; font-weight: bold; font-size: 12pt; line-height: 1.2; margin-bottom: 15px; text-transform: uppercase; color: black; }
-      .rpt-info { display: flex; justify-content: space-between; font-weight: bold; font-size: 10pt; margin-bottom: 5px; color: black; }
-      
-      /* Compact Table */
-      .report-table { width: 100%; border-collapse: collapse; font-size: 9pt; }
-      .report-table th { background-color: #eee !important; -webkit-print-color-adjust: exact; padding: 4px; border: 1px solid black; }
-      .report-table td { border: 1px solid black; padding: 2px; text-align: center; height: 18px; /* Fixed height to force fit */ }
-      
-      /* Signatures */
-      .rpt-footer { margin-top: 25px; display: flex; justify-content: space-between; font-size: 10pt; }
+    /* SMART BUTTON */
+    .smart-btn {
+      width: 100%; height: 100px; border-radius: 20px; font-size: 1.5rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1); transition: all 0.2s; border: none;
+      position: relative; overflow: hidden;
+    }
+    .smart-btn:active { transform: scale(0.96); }
+    
+    .btn-mode-in { background: linear-gradient(135deg, #1cc88a, #13855c); color: white; }
+    .btn-mode-out { background: linear-gradient(135deg, #e74a3b, #be2617); color: white; }
+    
+    /* TOAST POSITION */
+    .toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 1055; width: 90%; max-width: 350px; }
+    
+    /* LOADING OVERLAY */
+    #loadingOverlay {
+        position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(255,255,255,0.8); z-index: 10;
+        display: none; align-items: center; justify-content: center;
+        border-radius: 24px;
     }
   </style>
 </head>
 <body>
 
+  <div class="toast-container">
+    <div id="successToast" class="toast align-items-center text-white bg-success border-0 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body fs-6 fw-bold">
+          ✅ Successful Punch!
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
+    </div>
+  </div>
+
   <div class="app-card">
-    <div class="logo-header">
-      <div class="title-main">Geo-Fence Staff Attendance</div>
+    
+    <div class="logo-header mb-4 border-bottom pb-3">
+      <div class="title-main">GEO-FENCED PUNCHCARD SYSTEM</div>
+      <div class="title-sub">Jabatan Bedah Mulut & Maksilofasial</div>
       <div class="title-hospital">Hospital Pasir Gudang</div>
     </div>
 
+    <div id="loadingOverlay"><div class="spinner-border text-primary" role="status"></div></div>
+
     <div id="loginView">
-      <input type="email" id="email" class="form-control mb-3" placeholder="Enter Work Email">
+      <p class="text-muted small mb-3">Verify your email to access.</p>
+      <input type="email" id="email" class="form-control mb-3 text-center" placeholder="Enter Work Email">
       <button onclick="reqOTP()" id="btnOtp" class="btn btn-primary w-100 mb-3">Send Access Code</button>
-      <div id="otpArea" style="display:none;">
-        <input type="tel" id="otp" class="form-control mb-3" placeholder="6-Digit OTP" maxlength="6">
-        <button onclick="doLogin()" class="btn btn-success w-100">Verify & Login</button>
+      
+      <div id="otpArea" style="display:none; animation: fadeIn 0.5s;">
+        <input type="tel" id="otp" class="form-control mb-3 text-center" placeholder="6-Digit OTP" maxlength="6">
+        <button onclick="doLogin()" class="btn btn-success w-100 py-2">Verify & Login</button>
       </div>
     </div>
 
     <div id="punchView" class="d-none">
-      <h4 id="uName" class="fw-bold mb-1">Welcome</h4>
-      <span id="uShift" class="badge bg-light text-dark mb-3 border">--</span>
+      <h4 id="uName" class="fw-bold mb-1 text-dark">Welcome</h4>
+      <span id="uShift" class="badge bg-light text-primary border mb-3">--</span>
+
+      <div id="lastActionBox" class="alert alert-secondary p-2 small mb-4">
+         Last Action: <span id="lastActionText" class="fw-bold">None</span>
+      </div>
       
-      <button onclick="prePunchCheck('PUNCH IN')" class="btn btn-punch btn-in">📍 PUNCH IN</button>
-      <button onclick="prePunchCheck('PUNCH OUT')" class="btn btn-punch btn-out">🛑 PUNCH OUT</button>
+      <button id="smartBtn" onclick="smartPunch()" class="smart-btn btn-mode-in">
+        <span>📍</span> <span>PUNCH IN</span>
+      </button>
       
-      <button onclick="showReportModal()" class="btn btn-outline-dark w-100 mb-3 btn-sm">🖨️ Monthly Report</button>
+      <div class="d-flex justify-content-center mt-3">
+         <button onclick="toggleOverride()" class="btn btn-link btn-sm text-muted text-decoration-none" style="font-size:0.8rem;">
+           Switch Mode Manually
+         </button>
+      </div>
+
+      <div id="status" class="mt-3 text-muted small fw-bold">Ready</div>
       
-      <div id="status" class="text-muted small fw-bold mt-2">Ready</div>
-      <hr><button onclick="doLogout()" class="btn btn-light text-muted w-100 btn-sm">Sign Out</button>
+      <hr class="mt-4 opacity-25">
+      <button onclick="doLogout()" class="btn btn-light btn-sm w-100 text-muted">Log Out</button>
     </div>
   </div>
 
-  <div id="printSection">
-    <div class="rpt-header">
-      REPORT PUNCHCARD<br>JABATAN BEDAH MULUT & MAKSILOFASIAL<br>HOSPITAL PASIR GUDANG
-    </div>
-    
-    <div class="rpt-info">
-      <span id="rptName">NAMA: --</span>
-      <span id="rptMonth">BULAN: --</span>
-    </div>
-
-    <table class="report-table">
-      <thead>
-        <tr>
-          <th width="8%">TARIKH</th>
-          <th width="12%">MASUK</th>
-          <th width="12%">KELUAR</th>
-          <th width="12%">MASUK</th>
-          <th width="12%">KELUAR</th>
-          <th width="12%">MASUK</th>
-          <th width="12%">KELUAR</th>
-          <th>CATATAN</th>
-        </tr>
-      </thead>
-      <tbody id="rptBody">
-        </tbody>
-    </table>
-    
-    <div class="rpt-footer">
-      <div>Tandatangan Anggota:<br><br>_______________________</div>
-      <div>Tandatangan Ketua Jabatan:<br><br>_______________________</div>
-    </div>
-  </div>
-
-  <div class="modal fade" id="earlyModal" tabindex="-1">
+  <div class="modal fade" id="earlyModal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content text-center p-4">
-        <h5 class="fw-bold">⚠️ Early Departure</h5>
-        <p>Shift <span id="warnShift" class="fw-bold"></span> ends at <span id="warnTime" class="fw-bold"></span>.</p>
-        <button class="btn btn-danger w-100" onclick="proceedPunch('PUNCH OUT')">Proceed Anyway</button>
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header bg-warning border-0 text-center">
+          <h5 class="modal-title fw-bold text-dark w-100">⚠️ Early Departure</h5>
+        </div>
+        <div class="modal-body text-center p-4">
+          <p class="text-muted mb-1">Your shift (<span id="warnShift" class="fw-bold"></span>) ends at:</p>
+          <h2 class="fw-bold text-dark" id="warnTime">--:--</h2>
+          <p class="small text-danger mt-3">You are punching out early.</p>
+        </div>
+        <div class="modal-footer justify-content-center border-0 pb-4">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-danger px-4" onclick="proceedPunch('PUNCH OUT')">Proceed</button>
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="modal fade" id="reportModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content p-4">
-        <h6>Select Month</h6>
-        <input type="month" id="reportDate" class="form-control mb-3">
-        <button onclick="generateReport()" class="btn btn-primary w-100">Generate View</button>
-      </div>
-    </div>
-  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
   <script>
-    // --- CONFIGURATION ---
-    const API_URL = "https://script.google.com/macros/s/AKfycbwJA-PW_fV67H0MTMK2Ga-IY4KdLv_gePtiX8sKwCGnQKQU1KvnbSXmkLJXBw6iPFjA/exec"; 
+    // ==========================================
+    // 🔴 IMPORTANT: PASTE YOUR GOOGLE SCRIPT URL BELOW
+    // ==========================================
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzO0kuVhdVxYVg351pJAF2NjB-DG_A4X0CqMNsg4lb45JVbLcKP4eYvlrjUxkbVjdl2/exec"; 
+    
     const KEY = 'hpg_token';
     const SHIFT_RULES = { "WBF1": 16.5, "WBF2": 17.0, "WBF3": 17.5 };
 
-    // --- LOGIC ---
-    async function postData(data) {
-      try { return await (await fetch(API_URL, { method: "POST", body: JSON.stringify(data) })).json(); }
-      catch (e) { alert("Connection Error"); return { success: false }; }
+    // --- 1. API COMMUNICATION (Replaces google.script.run) ---
+    function callApi(action, payload, callback) {
+      if(SCRIPT_URL.includes("PASTE_YOUR_URL")) {
+        alert("Error: You have not pasted your Google Web App URL in the code yet.");
+        return;
+      }
+
+      // Show Loader
+      document.getElementById('loadingOverlay').style.display = 'flex';
+      
+      payload.action = action;
+      
+      // Send data to Google
+      fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById('loadingOverlay').style.display = 'none';
+        callback(data);
+      })
+      .catch(err => {
+        document.getElementById('loadingOverlay').style.display = 'none';
+        console.error(err);
+        alert("Connection Error. Please check internet.");
+      });
     }
 
-    if(localStorage.getItem(KEY)) {
-      document.getElementById('uName').innerText = localStorage.getItem('hpg_name');
-      document.getElementById('uShift').innerText = localStorage.getItem('hpg_shift');
+    // --- 2. AUTHENTICATION ---
+    function reqOTP() {
+      const em = document.getElementById('email').value;
+      if(!em) return alert("Please enter email");
+      
+      callApi("sendOTP", { email: em }, (r) => {
+        alert(r.msg);
+        if(r.success) document.getElementById('otpArea').style.display='block';
+      });
+    }
+
+    function doLogin() {
+      const em = document.getElementById('email').value;
+      const otp = document.getElementById('otp').value;
+      
+      callApi("verifyOTP", { email: em, otp: otp }, (r) => {
+        if(r.success) {
+          localStorage.setItem(KEY, r.key);
+          localStorage.setItem('hpg_name', r.name);
+          localStorage.setItem('hpg_shift', r.shift);
+          loadPunchView();
+        } else {
+          alert(r.msg);
+        }
+      });
+    }
+
+    function doLogout() {
+      if(confirm("Log out?")) {
+        localStorage.clear();
+        location.reload();
+      }
+    }
+
+    // --- 3. UI LOGIC (SMART BUTTON) ---
+    function loadPunchView() {
       document.getElementById('loginView').classList.add('d-none');
       document.getElementById('punchView').classList.remove('d-none');
+      document.getElementById('uName').innerText = localStorage.getItem('hpg_name');
+      document.getElementById('uShift').innerText = localStorage.getItem('hpg_shift');
+      updateLastActionUI();
     }
 
-    async function reqOTP() {
-      const em = document.getElementById('email').value; if(!em) return alert("Enter Email");
-      const btn = document.getElementById('btnOtp'); btn.innerText="Sending..."; btn.disabled=true;
-      const r = await postData({ action: "sendOTP", email: em });
-      alert(r.msg); btn.innerText="Send Access Code"; btn.disabled=false;
-      if(r.success) document.getElementById('otpArea').style.display='block';
+    function updateLastActionUI() {
+      const lastType = localStorage.getItem('hpg_last_type'); // "IN" or "OUT"
+      const lastTime = localStorage.getItem('hpg_last_time');
+      const btn = document.getElementById('smartBtn');
+      const info = document.getElementById('lastActionText');
+      const box = document.getElementById('lastActionBox');
+
+      if(lastType === "IN") {
+        // User is IN, so Button should be OUT (Red)
+        btn.className = "smart-btn btn-mode-out";
+        btn.innerHTML = "<span>🛑</span> <span>PUNCH OUT</span>";
+        btn.dataset.action = "PUNCH OUT";
+        
+        info.innerText = "PUNCH IN at " + (lastTime || "Unknown");
+        box.className = "alert alert-success p-2 small mb-4";
+      } else {
+        // User is OUT or New, Button should be IN (Green)
+        btn.className = "smart-btn btn-mode-in";
+        btn.innerHTML = "<span>📍</span> <span>PUNCH IN</span>";
+        btn.dataset.action = "PUNCH IN";
+        
+        if(lastType === "OUT") {
+           info.innerText = "PUNCH OUT at " + lastTime;
+           box.className = "alert alert-warning p-2 small mb-4";
+        } else {
+           info.innerText = "No record today";
+           box.className = "alert alert-secondary p-2 small mb-4";
+        }
+      }
     }
 
-    async function doLogin() {
-      const r = await postData({ action: "verifyOTP", email: document.getElementById('email').value, otp: document.getElementById('otp').value });
-      if(r.success) {
-        localStorage.setItem(KEY, r.key); localStorage.setItem('hpg_name', r.name); localStorage.setItem('hpg_shift', r.shift);
-        location.reload();
-      } else { alert(r.msg); }
+    function toggleOverride() {
+      const current = localStorage.getItem('hpg_last_type');
+      if(current === "IN") localStorage.setItem('hpg_last_type', "OUT");
+      else localStorage.setItem('hpg_last_type', "IN");
+      updateLastActionUI();
     }
 
-    function prePunchCheck(act) {
-      if (act === 'PUNCH IN') { proceedPunch(act); return; }
-      const shift = localStorage.getItem('hpg_shift'); const now = new Date();
-      const h = now.getHours() + (now.getMinutes()/60); const end = SHIFT_RULES[shift];
-      if (end && h < end) {
-        document.getElementById('warnShift').innerText = shift;
-        document.getElementById('warnTime').innerText = Math.floor(end) + ":" + ((end%1)*60 || "00");
-        new bootstrap.Modal('#earlyModal').show();
-      } else { proceedPunch(act); }
+    // --- 4. PUNCH LOGIC ---
+    function smartPunch() {
+      const action = document.getElementById('smartBtn').dataset.action;
+      
+      // Check shift end time logic for OUT
+      if (action === 'PUNCH OUT') {
+         const shift = localStorage.getItem('hpg_shift');
+         const now = new Date();
+         const currentHour = now.getHours() + (now.getMinutes() / 60);
+         const endTime = SHIFT_RULES[shift]; // e.g., 17.0 for 5pm
+
+         if (endTime && currentHour < endTime) {
+           // Early Departure Detected
+           const endH = Math.floor(endTime);
+           const endM = (endTime - endH) * 60;
+           const fmtTime = (endH > 12 ? endH - 12 : endH) + ":" + (endM===0?"00":endM) + " PM";
+           
+           document.getElementById('warnShift').innerText = shift;
+           document.getElementById('warnTime').innerText = fmtTime;
+           new bootstrap.Modal('#earlyModal').show();
+           return;
+         }
+      }
+      // If no warning needed
+      proceedPunch(action);
     }
 
     function proceedPunch(act) {
-      const m = bootstrap.Modal.getInstance(document.getElementById('earlyModal')); if(m) m.hide();
-      document.getElementById('status').innerHTML = "Locating...";
+      // Hide Modal if open
+      const el = document.getElementById('earlyModal');
+      const modal = bootstrap.Modal.getInstance(el);
+      if(modal) modal.hide();
+
+      document.getElementById('status').innerHTML = "Acquiring GPS...";
       
-      fetch('https://api.ipify.org?format=json').then(r=>r.json()).then(d => {
-        navigator.geolocation.getCurrentPosition(async pos => {
-          const r = await postData({ action: "punch", key: localStorage.getItem(KEY), lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy, ip: d.ip, act: act });
-          document.getElementById('status').innerText = r.msg;
-          if(r.success) setTimeout(()=>document.getElementById('status').innerText="Done", 3000);
-        }, () => alert("GPS Error"), {enableHighAccuracy:true});
-      }).catch(() => alert("Network Error"));
+      // 1. Get Location
+      if (!navigator.geolocation) return alert("Geolocation not supported");
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          // 2. Get IP (Client Side)
+          fetch('https://api.ipify.org?format=json')
+            .then(r => r.json())
+            .then(ipData => {
+                sendPunchData(act, pos.coords, ipData.ip);
+            })
+            .catch(() => {
+                sendPunchData(act, pos.coords, "Unknown IP");
+            });
+        },
+        (err) => {
+           alert("GPS Error: " + err.message + ". Check Location Permissions.");
+           document.getElementById('status').innerText = "GPS Failed";
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
     }
 
-    function showReportModal() { document.getElementById('reportDate').value = new Date().toISOString().slice(0,7); new bootstrap.Modal('#reportModal').show(); }
-
-    async function generateReport() {
-      const m = document.getElementById('reportDate').value;
-      if(!m) return alert("Select Month");
-      const btn = document.querySelector('#reportModal .btn-primary'); btn.innerText="Loading..."; btn.disabled=true;
-      const r = await postData({ action: "getReport", key: localStorage.getItem(KEY), month: m });
-      btn.innerText="Generate View"; btn.disabled=false;
-      bootstrap.Modal.getInstance(document.getElementById('reportModal')).hide();
-
-      if(r.success) {
-        document.getElementById('rptName').innerText = "NAMA: " + r.name.toUpperCase();
-        document.getElementById('rptMonth').innerText = "BULAN: " + m;
-        let html = "";
-        const days = new Date(m.split('-')[0], m.split('-')[1], 0).getDate();
+    function sendPunchData(act, coords, ip) {
+      document.getElementById('status').innerHTML = "Verifying...";
+      
+      callApi("punch", {
+        key: localStorage.getItem(KEY),
+        lat: coords.latitude,
+        lng: coords.longitude,
+        accuracy: coords.accuracy,
+        ip: ip,
+        act: act
+      }, (res) => {
+        document.getElementById('status').innerText = res.msg;
         
-        for(let i=1; i<=days; i++) {
-          const p = (r.data[i] || []).sort();
-          html += `<tr><td style="font-weight:bold">${i}</td>`;
-          for(let c=0; c<6; c++) html += `<td>${p[c] || ""}</td>`;
-          html += `<td></td></tr>`;
+        if (res.success) {
+           // Success! Update UI
+           const now = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+           const type = act.includes("IN") ? "IN" : "OUT";
+           
+           localStorage.setItem('hpg_last_type', type);
+           localStorage.setItem('hpg_last_time', now);
+           
+           updateLastActionUI();
+           
+           // Show Toast
+           const toastEl = document.getElementById('successToast');
+           const toast = new bootstrap.Toast(toastEl);
+           toast.show();
         }
-        document.getElementById('rptBody').innerHTML = html;
-        document.querySelector('.app-card').classList.add('d-none');
-        document.getElementById('printSection').style.display = 'block';
-        setTimeout(() => { window.print(); location.reload(); }, 500);
-      } else { alert(r.msg); }
+      });
     }
 
-    function doLogout() { localStorage.clear(); location.reload(); }
+    // --- 5. AUTO LOGIN ---
+    window.onload = () => {
+      if(localStorage.getItem(KEY)) {
+        loadPunchView();
+      }
+    };
   </script>
 </body>
 </html>
