@@ -4,31 +4,61 @@
   <meta charset="utf-8">
   <title>HPG Attendance</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
   
   <style>
-    /* ORIGINAL DESIGN STYLES */
-    body { background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%); font-family: 'Poppins', sans-serif; padding: 20px; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
-    .app-card { width: 100%; max-width: 400px; background: white; border-radius: 24px; padding: 35px 25px; box-shadow: 0 15px 35px rgba(0, 50, 80, 0.1); text-align: center; }
+    /* --- ORIGINAL UI STYLES --- */
+    body { 
+      background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%); 
+      font-family: 'Poppins', sans-serif; 
+      padding: 20px; 
+      min-height: 100vh; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+    }
     
+    .app-card { 
+      width: 100%; 
+      max-width: 400px; 
+      background: white; 
+      border-radius: 24px; 
+      padding: 35px 25px; 
+      box-shadow: 0 15px 35px rgba(0, 50, 80, 0.1); 
+      text-align: center; 
+    }
+    
+    /* TITLES */
     .title-main { font-weight: 700; color: #0f4c75; font-size: 1.1rem; text-transform: uppercase; margin-bottom: 5px; }
     .title-sub { font-weight: 500; color: #3282b8; font-size: 0.9rem; margin-bottom: 2px; }
     .title-hospital { font-weight: 600; color: #1b262c; font-size: 0.85rem; }
 
-    .smart-btn { width: 100%; height: 100px; border-radius: 20px; font-size: 1.5rem; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); transition: all 0.2s; border: none; color: white; margin-bottom: 20px; }
+    /* SMART BUTTON */
+    .smart-btn { 
+      width: 100%; height: 100px; border-radius: 20px; 
+      font-size: 1.5rem; font-weight: 700; color: white;
+      display: flex; align-items: center; justify-content: center; gap: 10px; 
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1); transition: all 0.2s; border: none; 
+      margin-bottom: 20px; 
+    }
     .smart-btn:active { transform: scale(0.96); }
     .btn-mode-in { background: linear-gradient(135deg, #1cc88a, #13855c); }
     .btn-mode-out { background: linear-gradient(135deg, #e74a3b, #be2617); }
 
+    /* UTILS */
     .toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 1055; width: 90%; max-width: 350px; }
     #loadingOverlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.8); z-index: 10; display: none; align-items: center; justify-content: center; border-radius: 24px; }
 
-    /* PRINT STYLES (Hidden on screen) */
+    /* --- PRINT REPORT STYLES (Hidden on screen) --- */
     #printSection { display: none; background: white; font-family: Arial, sans-serif; color: black; padding: 20px; }
-    .punch-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 20px; }
-    .punch-table th, .punch-table td { border: 1px solid black; padding: 5px; text-align: center; }
-    .punch-table th { background: #eee; }
+    
+    /* UPDATED TABLE FOR MULTI-PUNCH */
+    .punch-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 20px; }
+    .punch-table th, .punch-table td { border: 1px solid black; padding: 4px; text-align: center; height: 25px; }
+    .punch-table th { background: #eee; font-weight: bold; }
+    .weekend-row { background-color: #f2f2f2; }
     
     @media print {
       body * { visibility: hidden; }
@@ -42,7 +72,10 @@
 
   <div class="toast-container">
     <div id="successToast" class="toast align-items-center text-white bg-success border-0 shadow-lg">
-      <div class="d-flex"><div class="toast-body fs-6 fw-bold">✅ Successful Punch!</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>
+      <div class="d-flex">
+        <div class="toast-body fs-6 fw-bold">✅ Successful Punch!</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
     </div>
   </div>
 
@@ -82,7 +115,7 @@
       </div>
 
       <button onclick="openReportModal()" class="btn btn-outline-dark btn-sm w-100 mb-3">
-        📄 View/Print My Monthly Report
+        📄 View/Print Monthly Report
       </button>
 
       <hr class="opacity-25">
@@ -107,26 +140,46 @@
       <h5 class="fw-bold mb-0">HOSPITAL PASIR GUDANG</h5>
       <small>Jabatan Bedah Mulut & Maksilofasial</small>
     </div>
+    
     <div class="d-flex justify-content-between mb-3 small">
        <div>Name: <strong id="pName"></strong></div>
        <div>Month: <strong id="pMonth"></strong></div>
     </div>
+    
     <table class="punch-table">
-      <thead><tr><th>Date</th><th>IN</th><th>OUT</th><th>Notes</th></tr></thead>
-      <tbody id="reportGrid"></tbody>
+      <thead>
+        <tr>
+          <th style="width:10%">Date</th>
+          <th style="width:12%">IN</th>
+          <th style="width:12%">OUT</th>
+          <th style="width:12%">IN</th>
+          <th style="width:12%">OUT</th>
+          <th style="width:12%">IN</th>
+          <th style="width:12%">OUT</th>
+          <th style="width:18%">Notes</th>
+        </tr>
+      </thead>
+      <tbody id="reportGrid">
+        </tbody>
     </table>
+    
     <div class="mt-4 text-center no-print">
-      <button onclick="window.print()" class="btn btn-success btn-lg shadow">🖨️ PRINT</button>
+      <button onclick="window.print()" class="btn btn-success btn-lg shadow">🖨️ PRINT NOW</button>
       <button onclick="closeReport()" class="btn btn-secondary btn-lg ms-2">Back</button>
     </div>
+    <div class="mt-2 text-center no-print small text-muted">Use 'Save as PDF' or 'Print' option</div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    // 🔴 PASTE YOUR URL HERE
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyemjwHotqvuwaVwa_mbxmNd6-6LGiu54YsdwuIHe4IaoO4wYR0V4JFKEL6VUi6V5FU/exec"; 
+    // ==========================================
+    // 🔴 PASTE YOUR WEB APP URL HERE 👇
+    // ==========================================
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx...PASTE_YOUR_FULL_URL_HERE.../exec"; 
+    
     const KEY = 'hpg_token';
 
+    // --- API HELPER ---
     function callApi(action, payload, cb) {
       document.getElementById('loadingOverlay').style.display = 'flex';
       payload.action = action;
@@ -140,7 +193,7 @@
       });
     }
 
-    // --- REPORT LOGIC ---
+    // --- REPORT GENERATION (UPDATED FOR MULTI-PUNCH) ---
     function openReportModal() {
        document.getElementById('reportMonth').value = new Date().toISOString().slice(0, 7);
        new bootstrap.Modal('#reportModal').show();
@@ -160,14 +213,29 @@
           tbody.innerHTML = "";
           
           const days = new Date(m.split('-')[0], m.split('-')[1], 0).getDate();
+          
           for(let i=1; i<=days; i++) {
              let tr = document.createElement('tr');
-             let punches = r.data[i] || [];
-             punches.sort();
-             let inTime = punches[0] || "";
-             let outTime = punches.length > 1 ? punches[punches.length-1] : "";
              
-             tr.innerHTML = `<td>${i}</td><td>${inTime}</td><td>${outTime}</td><td></td>`;
+             // Get all punches, sort chronologically
+             let punches = r.data[i] || [];
+             punches.sort(); 
+             
+             // Weekend Styling
+             let fullDate = new Date(m + '-' + i);
+             let isWeekend = (fullDate.getDay() === 0 || fullDate.getDay() === 6);
+             if(isWeekend) tr.className = "weekend-row";
+
+             // Prepare Row HTML
+             let rowHtml = `<td><strong>${i}</strong></td>`;
+             
+             // Fill up to 6 punch slots (In/Out x3)
+             for(let j=0; j<6; j++) {
+                rowHtml += `<td>${punches[j] ? punches[j] : ""}</td>`;
+             }
+             
+             rowHtml += `<td></td>`; // Empty Notes column
+             tr.innerHTML = rowHtml;
              tbody.appendChild(tr);
           }
           
@@ -181,7 +249,7 @@
        document.getElementById('mainApp').style.display = 'block';
     }
 
-    // --- EXISTING APP LOGIC ---
+    // --- AUTH & PUNCH LOGIC (EXISTING) ---
     function reqOTP() { 
        callApi("sendOTP", {email: document.getElementById('email').value}, r=>{ alert(r.msg); if(r.success) document.getElementById('otpArea').style.display='block'; }); 
     }
