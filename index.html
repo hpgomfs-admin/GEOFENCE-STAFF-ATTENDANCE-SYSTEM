@@ -8,6 +8,8 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
   
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
   <style>
     /* --- ORIGINAL UI STYLES --- */
     body { 
@@ -30,7 +32,6 @@
       text-align: center; 
     }
     
-    /* TITLES */
     .title-main { font-weight: 700; color: #0f4c75; font-size: 1.1rem; text-transform: uppercase; margin-bottom: 5px; }
     .title-sub { font-weight: 500; color: #3282b8; font-size: 0.9rem; margin-bottom: 2px; }
     .title-hospital { font-weight: 600; color: #1b262c; font-size: 0.85rem; }
@@ -51,10 +52,8 @@
     .toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 1055; width: 90%; max-width: 350px; }
     #loadingOverlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.8); z-index: 10; display: none; align-items: center; justify-content: center; border-radius: 24px; }
 
-    /* --- PRINT REPORT STYLES (Hidden on screen) --- */
+    /* PRINT & REPORT STYLES */
     #printSection { display: none; background: white; font-family: Arial, sans-serif; color: black; padding: 20px; }
-    
-    /* UPDATED TABLE FOR MULTI-PUNCH */
     .punch-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 20px; }
     .punch-table th, .punch-table td { border: 1px solid black; padding: 4px; text-align: center; height: 25px; }
     .punch-table th { background: #eee; font-weight: bold; }
@@ -110,8 +109,10 @@
         <span>📍</span> <span>PUNCH IN</span>
       </button>
       
-      <div class="d-flex justify-content-center mt-2 mb-4">
-         <button onclick="toggleOverride()" class="btn btn-link btn-sm text-muted text-decoration-none">Switch Mode Manually</button>
+      <div class="d-flex justify-content-center gap-3 mb-4">
+         <button onclick="toggleOverride()" class="btn btn-link btn-sm text-muted text-decoration-none p-0">Switch Mode</button>
+         <span class="text-muted small">|</span>
+         <button onclick="openQRModal()" class="btn btn-link btn-sm text-warning fw-bold text-decoration-none p-0">📸 QR Backup (No GPS)</button>
       </div>
 
       <button onclick="openReportModal()" class="btn btn-outline-dark btn-sm w-100 mb-3">
@@ -120,6 +121,23 @@
 
       <hr class="opacity-25">
       <button onclick="doLogout()" class="btn btn-light btn-sm w-100 text-muted">Log Out</button>
+    </div>
+  </div>
+
+  <div class="modal fade no-print" id="qrModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-dark text-white">
+          <h6 class="modal-title">Scan Backup QR</h6>
+          <button type="button" class="btn-close btn-close-white" onclick="closeQRModal()"></button>
+        </div>
+        <div class="modal-body text-center p-0 bg-black">
+          <div id="reader" style="width: 100%; min-height:300px;"></div>
+        </div>
+        <div class="modal-footer justify-content-center bg-light">
+           <small class="text-muted">Point camera at the Reception Screen</small>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -140,34 +158,20 @@
       <h5 class="fw-bold mb-0">HOSPITAL PASIR GUDANG</h5>
       <small>Jabatan Bedah Mulut & Maksilofasial</small>
     </div>
-    
     <div class="d-flex justify-content-between mb-3 small">
        <div>Name: <strong id="pName"></strong></div>
        <div>Month: <strong id="pMonth"></strong></div>
     </div>
-    
     <table class="punch-table">
       <thead>
-        <tr>
-          <th style="width:10%">Date</th>
-          <th style="width:12%">IN</th>
-          <th style="width:12%">OUT</th>
-          <th style="width:12%">IN</th>
-          <th style="width:12%">OUT</th>
-          <th style="width:12%">IN</th>
-          <th style="width:12%">OUT</th>
-          <th style="width:18%">Notes</th>
-        </tr>
+        <tr><th style="width:10%">Date</th><th style="width:12%">IN</th><th style="width:12%">OUT</th><th style="width:12%">IN</th><th style="width:12%">OUT</th><th style="width:12%">IN</th><th style="width:12%">OUT</th><th style="width:18%">Notes</th></tr>
       </thead>
-      <tbody id="reportGrid">
-        </tbody>
+      <tbody id="reportGrid"></tbody>
     </table>
-    
     <div class="mt-4 text-center no-print">
       <button onclick="window.print()" class="btn btn-success btn-lg shadow">🖨️ PRINT NOW</button>
       <button onclick="closeReport()" class="btn btn-secondary btn-lg ms-2">Back</button>
     </div>
-    <div class="mt-2 text-center no-print small text-muted">Use 'Save as PDF' or 'Print' option</div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -178,6 +182,7 @@
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyemjwHotqvuwaVwa_mbxmNd6-6LGiu54YsdwuIHe4IaoO4wYR0V4JFKEL6VUi6V5FU/exec"; 
     
     const KEY = 'hpg_token';
+    let html5QrcodeScanner = null; // Scanner instance
 
     // --- API HELPER ---
     function callApi(action, payload, cb) {
@@ -193,7 +198,58 @@
       });
     }
 
-    // --- REPORT GENERATION (UPDATED FOR MULTI-PUNCH) ---
+    // --- QR SCANNER LOGIC ---
+    function openQRModal() {
+       new bootstrap.Modal('#qrModal', {backdrop: 'static'}).show();
+       
+       // Delay start slightly to allow modal to render
+       setTimeout(() => {
+          if(!html5QrcodeScanner) {
+             html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
+             html5QrcodeScanner.render(onScanSuccess);
+          }
+       }, 500);
+    }
+
+    function closeQRModal() {
+       if(html5QrcodeScanner) {
+          html5QrcodeScanner.clear().then(() => {
+             html5QrcodeScanner = null;
+             // Remove backdrop manually if needed or just hide modal
+             bootstrap.Modal.getInstance(document.getElementById('qrModal')).hide();
+          }).catch(err => {
+             console.error("Failed to clear scanner", err);
+             bootstrap.Modal.getInstance(document.getElementById('qrModal')).hide();
+          });
+       } else {
+          bootstrap.Modal.getInstance(document.getElementById('qrModal')).hide();
+       }
+    }
+
+    function onScanSuccess(decodedText) {
+       // Stop scanning immediately
+       if(html5QrcodeScanner) {
+          html5QrcodeScanner.clear();
+          html5QrcodeScanner = null;
+       }
+       bootstrap.Modal.getInstance(document.getElementById('qrModal')).hide();
+
+       // Determine Action from the main button state
+       const act = document.getElementById('smartBtn').dataset.action;
+       
+       // Submit with dummy lat/lng but legitimate qrData
+       callApi("punch", {
+          key: localStorage.getItem(KEY),
+          lat: 0, lng: 0, accuracy: 0, 
+          ip: 'QR_Scan',
+          act: act,
+          qrData: decodedText
+       }, r => {
+          handlePunchResponse(r, act);
+       });
+    }
+
+    // --- REPORT & APP LOGIC ---
     function openReportModal() {
        document.getElementById('reportMonth').value = new Date().toISOString().slice(0, 7);
        new bootstrap.Modal('#reportModal').show();
@@ -206,39 +262,26 @@
        
        callApi("getReport", { key: localStorage.getItem(KEY), month: m }, r => {
           if(!r.success) return alert(r.msg);
-          
           document.getElementById('pName').innerText = r.name;
           document.getElementById('pMonth').innerText = m;
           const tbody = document.getElementById('reportGrid');
           tbody.innerHTML = "";
-          
           const days = new Date(m.split('-')[0], m.split('-')[1], 0).getDate();
           
           for(let i=1; i<=days; i++) {
              let tr = document.createElement('tr');
-             
-             // Get all punches, sort chronologically
              let punches = r.data[i] || [];
              punches.sort(); 
              
-             // Weekend Styling
              let fullDate = new Date(m + '-' + i);
-             let isWeekend = (fullDate.getDay() === 0 || fullDate.getDay() === 6);
-             if(isWeekend) tr.className = "weekend-row";
+             if(fullDate.getDay() === 0 || fullDate.getDay() === 6) tr.className = "weekend-row";
 
-             // Prepare Row HTML
              let rowHtml = `<td><strong>${i}</strong></td>`;
-             
-             // Fill up to 6 punch slots (In/Out x3)
-             for(let j=0; j<6; j++) {
-                rowHtml += `<td>${punches[j] ? punches[j] : ""}</td>`;
-             }
-             
-             rowHtml += `<td></td>`; // Empty Notes column
+             for(let j=0; j<6; j++) rowHtml += `<td>${punches[j] ? punches[j] : ""}</td>`;
+             rowHtml += `<td></td>`;
              tr.innerHTML = rowHtml;
              tbody.appendChild(tr);
           }
-          
           document.getElementById('mainApp').style.display = 'none';
           document.getElementById('printSection').style.display = 'block';
        });
@@ -249,10 +292,7 @@
        document.getElementById('mainApp').style.display = 'block';
     }
 
-    // --- AUTH & PUNCH LOGIC (EXISTING) ---
-    function reqOTP() { 
-       callApi("sendOTP", {email: document.getElementById('email').value}, r=>{ alert(r.msg); if(r.success) document.getElementById('otpArea').style.display='block'; }); 
-    }
+    function reqOTP() { callApi("sendOTP", {email: document.getElementById('email').value}, r=>{ alert(r.msg); if(r.success) document.getElementById('otpArea').style.display='block'; }); }
     
     function doLogin() {
        callApi("verifyOTP", {email: document.getElementById('email').value, otp: document.getElementById('otp').value}, r=>{
@@ -266,19 +306,22 @@
     function smartPunch() {
        const act = document.getElementById('smartBtn').dataset.action;
        if(!navigator.geolocation) return alert("No GPS");
-       
        navigator.geolocation.getCurrentPosition(pos => {
-          callApi("punch", {key: localStorage.getItem(KEY), lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy, ip:'Mobile', act: act}, r=>{
-             if(r.success) {
-                const now = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-                const type = act.includes("IN") ? "IN" : "OUT";
-                localStorage.setItem('hpg_last_type', type);
-                localStorage.setItem('hpg_last_time', now);
-                updateLastActionUI();
-                new bootstrap.Toast(document.getElementById('successToast')).show();
-             } else alert(r.msg);
+          callApi("punch", {key: localStorage.getItem(KEY), lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy, ip:'Mobile', act: act}, r => {
+             handlePunchResponse(r, act);
           });
        });
+    }
+
+    function handlePunchResponse(r, act) {
+       if(r.success) {
+          const now = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+          const type = act.includes("IN") ? "IN" : "OUT";
+          localStorage.setItem('hpg_last_type', type);
+          localStorage.setItem('hpg_last_time', now);
+          updateLastActionUI();
+          new bootstrap.Toast(document.getElementById('successToast')).show();
+       } else alert(r.msg);
     }
 
     function updateLastActionUI() {
